@@ -1,0 +1,38 @@
+---
+- name: Install zabbix
+  hosts: server
+  become: yes
+  tasks:
+    - name: check zabbix repository
+      ansible.builtin.command:
+        cmd: rpm -q zabbix-release
+      register: repo_check
+      ignore_errors: yes
+      changed_when: false
+
+    - name: add Zabbix repositroy
+      ansible.builtin.command:
+        cmd: rpm -Uvh https://repo.zabbix.com/zabbix/7.0/alma/10/x86_64/zabbix-release-latest-7.0.el10.noarch.rpm
+      register: repo_added
+      when: repo_check.rc != 0
+
+    - name: clean dnf
+      ansible.builtin.command:
+        cmd: dnf clean all
+      when: repo_added.changed
+
+    - name: install zabbix-agent
+      ansible.builtin.dnf:
+        name:
+          - zabbix-agent
+        state: present
+
+    - name: restart zabbix-agent
+      ansible.builtin.systemd:
+        name: zabbix-agent
+        state: restarted
+
+    - name: enable zabbix-agent
+      ansible.builtin.systemd:
+        name: zabbix-agent
+        enabled: yes
