@@ -36,3 +36,23 @@
       ansible.builtin.systemd:
         name: zabbix-agent
         enabled: yes
+
+    - name: add zabix-server 
+      ansible.builtin.lineinfile:
+        path: /etc/zabbix/zabbix_agentd.conf
+        regexp: '^Server='
+        line: 'Server=192.168.0.227'
+      notify: restart zabbix-agent
+
+    - name: add zabbix-proxy
+      ansible.builtin.lineinfile:
+        path: /etc/zabbix/zabbix_agentd.conf
+        regexp: '^ServerActive='
+        line: 'ServerActive=192.168.0.227'
+      notify: restart zabbix-agent
+
+  handlers:
+    - name: restart zabbix-agent
+      ansible.builtin.systemd:
+        name: zabbix-agent
+        state: restarted
